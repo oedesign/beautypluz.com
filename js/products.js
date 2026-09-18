@@ -27,7 +27,7 @@
       name: "Renewing Cleansing Balm",
       category: "cleanser",
       price: 32,
-      image: "images/products/cleansing-balm.jpg",
+      image: "images/products/skincare-product-5.webp",
       description: "A botanical balm that melts away impurities without stripping the skin barrier.",
       badge: "bestseller",
       icon: "balm",
@@ -39,7 +39,7 @@
       name: "Sage & Peptide Serum",
       category: "serum",
       price: 58,
-      image: "images/products/peptide-serum.jpg",
+      image: "images/products/skincare-product-1.webp",
       description: "Concentrated peptides and sage extract to firm and brighten over time.",
       badge: "new",
       icon: "serum",
@@ -51,7 +51,7 @@
       name: "Barrier Repair Cream",
       category: "moisturizer",
       price: 46,
-      image: "images/products/repair-cream.jpg",
+      image: "images/products/skincare-product-6.webp",
       description: "A rich, ceramide-forward cream that locks in moisture for 24 hours.",
       badge: "bestseller",
       icon: "cream",
@@ -63,7 +63,7 @@
       name: "Rosewater Balancing Mist",
       category: "toner",
       price: 24,
-      image: "images/products/rosewater-mist.jpg",
+      image: "images/products/skincare-product-2.webp",
       description: "A weightless mist that resets and hydrates skin any time of day.",
       badge: "new",
       icon: "mist",
@@ -75,7 +75,7 @@
       name: "Overnight Renewal Oil",
       category: "oil",
       price: 64,
-      image: "images/products/renewal-oil.jpg",
+      image: "images/products/skincare-product-7.webp",
       description: "A silky facial oil that works while you sleep to restore radiance by morning.",
       badge: "bestseller",
       icon: "oil",
@@ -87,7 +87,7 @@
       name: "Clarifying Clay Mask",
       category: "mask",
       price: 38,
-      image: "images/products/clay-mask.jpg",
+      image: "images/products/skincare-product-4.webp",
       description: "Mineral-rich clay that draws out impurities without over-drying skin.",
       badge: "new",
       icon: "mask",
@@ -99,7 +99,7 @@
       name: "Vitamin C Brightening Drops",
       category: "serum",
       price: 52,
-      image: "images/products/vitamin-c-drops.jpg",
+      image: "images/products/skincare-product-8.webp",
       description: "A stable, gentle vitamin C concentrate that evens tone without irritation.",
       badge: "bestseller",
       icon: "serum",
@@ -111,7 +111,7 @@
       name: "Gentle Enzyme Polish",
       category: "exfoliant",
       price: 36,
-      image: "images/products/enzyme-polish.jpg",
+      image: "images/products/skincare-product-3.webp",
       description: "Fruit enzymes and fine rice powder buff away dullness without micro-tears.",
       badge: "new",
       icon: "balm",
@@ -123,7 +123,7 @@
       name: "Mineral Sheer Sunscreen SPF 40",
       category: "spf",
       price: 34,
-      image: "images/products/mineral-spf.jpg",
+      image: "",
       description: "A weightless, no-white-cast mineral filter for everyday protection.",
       badge: "new",
       icon: "spf",
@@ -135,7 +135,7 @@
       name: "Creamy Milk Cleanser",
       category: "cleanser",
       price: 28,
-      image: "images/products/milk-cleanser.jpg",
+      image: "",
       description: "A soft, low-foam cleanser that leaves skin comfortable, never tight.",
       badge: "",
       icon: "cream",
@@ -147,7 +147,7 @@
       name: "Overnight Repair Gel Cream",
       category: "moisturizer",
       price: 48,
-      image: "images/products/repair-gel-cream.jpg",
+      image: "",
       description: "A lightweight gel-cream that supports skin's natural repair cycle while you sleep.",
       badge: "bestseller",
       icon: "cream",
@@ -159,7 +159,7 @@
       name: "Hydrating Essence Toner",
       category: "toner",
       price: 30,
-      image: "images/products/hydrating-essence.jpg",
+      image: "",
       description: "A hydrating first step that preps skin to absorb everything layered after it.",
       badge: "",
       icon: "mist",
@@ -185,30 +185,90 @@
     spf: '<circle cx="12" cy="12" r="4.5"></circle><path d="M12 2.5v2M12 19.5v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M2.5 12h2M19.5 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"></path>',
   };
 
+  const IMAGE_STORAGE_KEY = "beautyPluzProductImages";
+
+  function readImageOverrides() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(IMAGE_STORAGE_KEY) || "{}");
+      return saved && typeof saved === "object" && !Array.isArray(saved) ? saved : {};
+    } catch (err) {
+      console.warn("Beauty Pluz: could not read product images from storage", err);
+      return {};
+    }
+  }
+
+  function saveImageOverrides(overrides) {
+    try {
+      localStorage.setItem(IMAGE_STORAGE_KEY, JSON.stringify(overrides));
+      return true;
+    } catch (err) {
+      console.error("Beauty Pluz: could not save product image", err);
+      return false;
+    }
+  }
+
+  function productWithImage(product) {
+    if (!product) return null;
+    const overrides = readImageOverrides();
+    const image = Object.prototype.hasOwnProperty.call(overrides, product.id)
+      ? overrides[product.id]
+      : product.image;
+    return { ...product, image: typeof image === "string" ? image : "" };
+  }
+
+  function escapeHTML(value) {
+    return String(value).replace(/[&<>'"]/g, (character) => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;",
+    })[character]);
+  }
+
   const Products = {
     getAll() {
-      return sampleProducts;
+      return sampleProducts.map(productWithImage);
     },
 
     getById(id) {
-      return sampleProducts.find((product) => product.id === id) || null;
+      return productWithImage(sampleProducts.find((product) => product.id === id));
     },
 
     getByCategory(category) {
-      if (!category || category === "all") return sampleProducts;
-      return sampleProducts.filter((product) => product.category === category);
+      const products = !category || category === "all"
+        ? sampleProducts
+        : sampleProducts.filter((product) => product.category === category);
+      return products.map(productWithImage);
     },
 
     getByBadge(badge) {
-      return sampleProducts.filter((product) => product.badge === badge);
+      return sampleProducts.filter((product) => product.badge === badge).map(productWithImage);
     },
 
     search(query) {
       const term = (query || "").trim().toLowerCase();
-      if (!term) return sampleProducts;
-      return sampleProducts.filter((product) =>
+      const products = !term ? sampleProducts : sampleProducts.filter((product) =>
         product.name.toLowerCase().includes(term)
       );
+      return products.map(productWithImage);
+    },
+
+    getImageMarkup(product, className) {
+      if (product.image) {
+        return `<img class="${className}" src="${escapeHTML(product.image)}" alt="${escapeHTML(product.name)}">`;
+      }
+      return `<div class="${className} product-image-placeholder product-image-placeholder--${escapeHTML(product.icon)}" role="img" aria-label="${escapeHTML(product.name)} image unavailable">${Products.getIconMarkup(product.icon)}</div>`;
+    },
+
+    setImage(id, image) {
+      if (!sampleProducts.some((product) => product.id === id) || typeof image !== "string") return null;
+      const overrides = readImageOverrides();
+      overrides[id] = image;
+      if (!saveImageOverrides(overrides)) return null;
+      const product = Products.getById(id);
+      window.dispatchEvent(new CustomEvent("beautypluz:product-image-change", { detail: { id, image: product.image } }));
+      return product;
+    },
+
+    removeImage(id) {
+      return Products.setImage(id, "");
     },
 
     /** Returns an inline <svg>…</svg> string for a given icon keyword. */
@@ -259,9 +319,9 @@
     return `
       <article class="${cardClass}"${cardStyle} data-product-id="${product.id}">
         <div class="product-card__media">
-          <div class="product-card__image product-card__image--${product.icon} zoom-layer" aria-hidden="true">
-            ${Products.getIconMarkup(product.icon)}
-          </div>
+          <a class="product-card__detail-link" href="product.html?id=${encodeURIComponent(product.id)}" aria-label="View ${escapeHTML(product.name)} details">
+            ${Products.getImageMarkup(product, "product-card__image zoom-layer")}
+          </a>
           ${badgeMarkup}
           <button type="button" class="product-card__wishlist" data-wishlist-toggle aria-label="Add ${product.name} to wishlist" aria-pressed="false">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -616,6 +676,78 @@
     });
   }
 
+  function hydrateStaticProductImages() {
+    document.querySelectorAll("[data-product-id]").forEach((card) => {
+      const product = Products.getById(card.getAttribute("data-product-id"));
+      const media = card.querySelector(".product-card__media");
+      if (!product || !media) return;
+      media.querySelectorAll("img, .product-card__image").forEach((element) => element.remove());
+      media.insertAdjacentHTML("beforeend", Products.getImageMarkup(product, "product-card__image zoom-layer"));
+    });
+  }
+
+  function renderProductDetail() {
+    const container = document.querySelector("[data-product-detail]");
+    if (!container) return;
+    const id = new URLSearchParams(window.location.search).get("id");
+    const product = Products.getById(id);
+    if (!product) {
+      container.innerHTML = '<p class="product-detail__not-found">This product could not be found. <a href="shop.html">Browse the collection</a>.</p>';
+      return;
+    }
+    const category = CATEGORY_LABELS[product.category] || product.category;
+    container.innerHTML = `
+      <div class="product-detail__media">${Products.getImageMarkup(product, "product-detail__image")}</div>
+      <div class="product-detail__content" data-product-id="${product.id}">
+        <p class="product-card__category">${escapeHTML(category)}</p>
+        <h1>${escapeHTML(product.name)}</h1>
+        <p class="product-detail__price">$${product.price.toFixed(2)}</p>
+        <p class="product-detail__description">${escapeHTML(product.description)}</p>
+        <button type="button" class="btn btn--primary" data-add-to-cart>Add to Cart</button>
+        <section class="product-image-manager" aria-labelledby="image-manager-heading">
+          <h2 id="image-manager-heading">Product image</h2>
+          <p>Upload a JPG, PNG, WebP, or GIF (up to 2 MB). The selected image is stored on this device.</p>
+          <label class="btn btn--secondary" for="product-image-upload">Upload or replace image</label>
+          <input id="product-image-upload" type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden>
+          <button type="button" class="product-image-manager__remove" data-remove-product-image ${product.image ? "" : "disabled"}>Remove image</button>
+          <p class="product-image-manager__status" data-image-status aria-live="polite"></p>
+        </section>
+      </div>`;
+    initProductCardActions();
+    const input = container.querySelector("#product-image-upload");
+    const status = container.querySelector("[data-image-status]");
+    input.addEventListener("change", () => {
+      const file = input.files && input.files[0];
+      if (!file) return;
+      if (!file.type.startsWith("image/") || file.size > 2 * 1024 * 1024) {
+        status.textContent = "Choose an image file smaller than 2 MB.";
+        input.value = "";
+        return;
+      }
+      const reader = new FileReader();
+      reader.onerror = () => { status.textContent = "The image could not be read. Please try another file."; };
+      reader.onload = () => {
+        if (!Products.setImage(product.id, reader.result)) {
+          status.textContent = "The image could not be saved. Please use a smaller file.";
+          return;
+        }
+        renderProductDetail();
+      };
+      reader.readAsDataURL(file);
+    });
+    container.querySelector("[data-remove-product-image]").addEventListener("click", () => {
+      Products.removeImage(product.id);
+      renderProductDetail();
+    });
+  }
+
+  function refreshProductImages() {
+    hydrateStaticProductImages();
+    if (document.querySelector("[data-product-grid]")) renderShopGrid();
+  }
+
+  window.addEventListener("beautypluz:product-image-change", refreshProductImages);
+
   /* -----------------------------
      Card interactions — wires up any [data-add-to-cart] button
      found on the page (homepage grids, shop grids, etc.) to the
@@ -660,6 +792,8 @@
   // matter for the homepage's hand-authored static cards, and are
   // harmless no-ops against shop.html's still-loading skeleton.)
   document.addEventListener("DOMContentLoaded", () => {
+    hydrateStaticProductImages();
+    renderProductDetail();
     initShopToolbar();
     initFilterDrawer();
     initShopSearch();

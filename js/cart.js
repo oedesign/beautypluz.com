@@ -45,6 +45,9 @@
 
       if (existing) {
         existing.quantity += qty;
+        // Preserve this product's own current image rather than borrowing another line's image.
+        existing.image = product.image || "";
+        existing.icon = product.icon || "";
       } else {
         items.push({
           id: product.id,
@@ -94,6 +97,15 @@
 
     clear() {
       this._save([]);
+    },
+
+    updateItemImage(id, image) {
+      const items = this.getItems();
+      const item = items.find((entry) => entry.id === id);
+      if (!item) return items;
+      item.image = typeof image === "string" ? image : "";
+      this._save(items);
+      return items;
     },
 
     getItemCount() {
@@ -279,8 +291,8 @@
     row.setAttribute("data-cart-row", item.id);
 
     row.innerHTML = `
-      <div class="cart-row__media cart-row__media--${item.icon || "serum"}">
-        ${getIconMarkup(item.icon)}
+      <div class="cart-row__media ${item.image ? "cart-row__media--photo" : `cart-row__media--${item.icon || "serum"}`}>
+        ${item.image ? `<img src="${item.image}" alt="${item.name}">` : getIconMarkup(item.icon)}
       </div>
       <div class="cart-row__details">
         <p class="cart-row__category">${item.category || ""}</p>
@@ -351,6 +363,11 @@
     Cart.onChange(renderCartPage);
     initWhatsAppOrder();
   }
+
+  window.addEventListener("beautypluz:product-image-change", (event) => {
+    const detail = event.detail || {};
+    if (detail.id) Cart.updateItemImage(detail.id, detail.image);
+  });
 
   document.addEventListener("DOMContentLoaded", initCartPage);
 })();
